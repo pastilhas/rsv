@@ -1,8 +1,6 @@
 <div align="center">
 
-<h2></h2>
-
-# RSV - Simplified Streamable Values
+# RSV - Rows of String Values
 
 [![Vlang][VlangBadge]][VlangLink]
 ![WIP][WIPBadge]
