@@ -1,4 +1,0 @@
-module main
-
-fn main() {
-}
