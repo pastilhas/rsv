@@ -1,30 +1,33 @@
 module rsv
 
-const eov_flag = 0xFF
-const null_flag = 0xFE
-const eor_flag = 0xFD
-const empty_val = ''
-const null_val = none
+import encoding.utf8
 
-// unvalidated encode
-pub fn encode(table [][]?string) []u8 {
-	mut bytes := []u8{}
+const eov = u8(0xFF)
+const eor = u8(0xFD)
+const null = u8(0xFE)
 
-	for row in table {
-		for val in row {
-			if str := val {
-				bytes << str.bytes()
-			} else {
-				bytes << null_flag
-			}
-
-			bytes << eov_flag
+fn val2bytes(val ?string) ![]u8 {
+	return if str := val {
+		if utf8.validate_str(str) {
+			str.bytes()
+		} else {
+			error('Invalid UTF8 string ${str}')
 		}
-
-		bytes << eor_flag
+	} else {
+		[null]
 	}
+}
 
-	return bytes
+pub fn encode(rows [][]?string) ![]u8 {
+	mut res := []u8{}
+	for row in rows {
+		for val in row {
+			res << val2bytes(val)!
+			res << eov
+		}
+		res << eor
+	}
+	return res
 }
 
 // unvalidated decode
@@ -34,11 +37,11 @@ pub fn decode(bytes []u8) [][]?string {
 	mut start := 0
 
 	for i := 0; i < bytes.len; i++ {
-		if bytes[i] == eov_flag {
+		if bytes[i] == eov {
 			if i == start {
-				row << empty_val
-			} else if bytes[start] == null_flag {
-				row << null_val
+				row << ''
+			} else if bytes[start] == null {
+				row << none
 			} else {
 				row << bytes[start..i].bytestr()
 			}
@@ -47,7 +50,7 @@ pub fn decode(bytes []u8) [][]?string {
 			continue
 		}
 
-		if bytes[i] == eor_flag {
+		if bytes[i] == eor {
 			table << row
 			row = []?string{}
 			start += 1
