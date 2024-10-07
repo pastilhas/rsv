@@ -56,6 +56,7 @@ pub fn decode(bytes []u8) [][]?string {
 		if bytes[i] == eor {
 			res << row
 			row = []?string{}
+			j = 1
 			i += 1
 		}
 	}
