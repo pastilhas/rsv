@@ -30,32 +30,35 @@ pub fn encode(rows [][]?string) ![]u8 {
 	return res
 }
 
+fn bytes2val(bytes []u8, i int, j int) ?string {
+	return if j == i {
+		''
+	} else if bytes[i] == null {
+		none
+	} else {
+		bytes[i..j].bytestr()
+	}
+}
+
 // unvalidated decode
 pub fn decode(bytes []u8) [][]?string {
-	mut table := [][]?string{}
+	mut res := [][]?string{}
 	mut row := []?string{}
-	mut start := 0
+	mut i := 0
 
-	for i := 0; i < bytes.len; i++ {
-		if bytes[i] == eov {
-			if i == start {
-				row << ''
-			} else if bytes[start] == null {
-				row << none
-			} else {
-				row << bytes[start..i].bytestr()
-			}
-
-			start = i + 1
-			continue
+	for j := 0; j < bytes.len; j++ {
+		if bytes[j] == eov {
+			val := bytes2val(bytes, i, j)
+			row << val
+			i = j + 1
 		}
 
 		if bytes[i] == eor {
-			table << row
+			res << row
 			row = []?string{}
-			start += 1
+			i += 1
 		}
 	}
 
-	return table
+	return res
 }
