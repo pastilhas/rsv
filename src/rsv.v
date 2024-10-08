@@ -40,25 +40,33 @@ fn bytes2val(bytes []u8, i int, j int) ?string {
 	}
 }
 
+fn decode_row(bytes []u8, start int, end int) ([]?string, int) {
+	mut row := []?string{}
+	mut i := start
+
+	for j := start; j < end; j++ {
+		if bytes[j] == eov {
+			val := bytes2val(bytes, i, j)
+			row << val
+			i = j + 1
+		} else if bytes[i] == eor {
+			i = j + 1
+			break
+		}
+	}
+
+	return row, i
+}
+
 // unvalidated decode
 pub fn decode(bytes []u8) [][]?string {
 	mut res := [][]?string{}
 	mut row := []?string{}
 	mut i := 0
 
-	for j := 0; j < bytes.len; j++ {
-		if bytes[j] == eov {
-			val := bytes2val(bytes, i, j)
-			row << val
-			i = j + 1
-		}
-
-		if bytes[i] == eor {
-			res << row
-			row = []?string{}
-			j = i
-			i += 1
-		}
+	for i < bytes.len {
+		row, i = decode_row(bytes, i, bytes.len)
+		res << row
 	}
 
 	return res
